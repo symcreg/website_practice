@@ -2,7 +2,7 @@ package handler
 
 import (
 	regexp "github.com/dlclark/regexp2"
-	"github.com/gin-gonic/gin"
+	gin "github.com/gin-gonic/gin"
 	"strings"
 	"test/internal/middleware"
 	"test/internal/model"
@@ -37,9 +37,9 @@ func (u *UserHandler) Register(router *gin.Engine) {
 	protected.Use(middleware.JwtToken())
 	ug.POST("/register", u.RegisterUser)
 	protected.POST("/login", u.Login)
-	protected.GET("/profile", u.Profile)
+	protected.GET("/profile", u.Profile) //TODO: add front end
 	protected.GET("/logout", u.Logout)
-	protected.PUT("/profile_update", u.UpdateProfile)
+	protected.PUT("/profile_update", u.UpdateProfile) //TODO: add front end
 	protected.PUT("/change_password", u.ChangePassword)
 	//protected.GET("/cancel_account", u.CancelAccount)
 }
@@ -157,17 +157,17 @@ func (u *UserHandler) Login(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "Invalid email or password"})
 		return
 	}
-	c.JSON(200, gin.H{"message": "Login successful"})
 	// Generate token
 	type LoginResponse struct {
-		Token string `json:"token"`
+		Message string `json:"message"`
+		Token   string `json:"token"`
 	}
 	token, err := utility.GenerateToken(req.Email)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
 	}
-	c.JSON(200, LoginResponse{Token: token})
+	c.JSON(200, LoginResponse{Message: "Login successful", Token: token})
 }
 func (u *UserHandler) Logout(c *gin.Context) {
 	email, _ := c.Get("email")
@@ -250,14 +250,17 @@ func (u *UserHandler) ChangePassword(c *gin.Context) {
 		return
 	}
 	type ChangePasswordRequest struct {
-		OldPassword string `json:"old_password"`
-		NewPassword string `json:"new_password"`
+		OldPassword        string `json:"old_password"`
+		NewPassword        string `json:"new_password"`
+		ConfirmNewPassword string `json:"confirm_new_password"`
 	}
 	var req ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, gin.H{"error": "Invalid request"})
 		return
-
+	}
+	if req.NewPassword != req.ConfirmNewPassword {
+		c.JSON(400, gin.H{"error": "New password and confirm new password do not match"})
 	}
 	ok, err := u.passwordExp.MatchString(req.NewPassword)
 	if err != nil {
@@ -277,7 +280,6 @@ func (u *UserHandler) ChangePassword(c *gin.Context) {
 	if err := model.UpdateUser(user); err != nil {
 		c.JSON(500, gin.H{"error": "Internal server error"})
 		return
-
 	}
 	c.JSON(200, gin.H{"message": "Password changed successfully"})
 }

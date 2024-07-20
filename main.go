@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"test/internal/config"
 	"test/internal/handler"
+	"test/internal/middleware"
 	"test/internal/model"
 	"time"
 )
@@ -18,6 +19,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 	router := gin.Default()
+	router.Use(middleware.Cors())
 	config.LoadConfig()
 	model.InitDB()
 	u := handler.NewUserHandler()

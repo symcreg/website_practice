@@ -1,5 +1,7 @@
 package model
 
+// TODO: add searcher
+
 type User struct {
 	ID           int `gorm:"primary_key"`
 	Name         string

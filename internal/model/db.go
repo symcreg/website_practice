@@ -18,11 +18,7 @@ func InitDB() {
 	if err != nil {
 		panic(err)
 	}
-	err = db.AutoMigrate(&User{})
-	if err != nil {
-		panic(err)
-	}
-	err = db.AutoMigrate(&BlackList{})
+	err = db.AutoMigrate(&User{}, &BlackList{})
 	if err != nil {
 		panic(err)
 	}
